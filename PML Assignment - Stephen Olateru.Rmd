@@ -1,0 +1,79 @@
+---
+title: "Practical Machine Learning Assignment"
+author: "Stephen Olateru"
+date: "Friday, January 23, 2015"
+output: html_document
+---
+
+### Introduction:
+
+The goal of the project is to predict the manner in which participants perform in the weight lifting exercise.
+
+This human activity recognition research has traditionally focused on discriminating between different activities, i.e. to predict "which" activity was performed at a specific point in time. The approach we propose for the Weight Lifting Exercises dataset is to investigate "how (well)" an activity was performed by the wearer. The "how (well)" investigation has only received little attention so far, even though it potentially provides useful information for a large variety of applications,such as sports training.
+
+
+### Data:
+
+Six young health participants were asked to perform one set of 10 repetitions of the Unilateral Dumbbell Biceps Curl in five different fashions: exactly according to the specification (Class A), throwing the elbows to the front (Class B), lifting the dumbbell only halfway (Class C), lowering the dumbbell only halfway (Class D) and throwing the hips to the front (Class E).
+
+This is an observational study because we are merely observing the data of the six participants.
+
+### Exploratory data analysis:
+
+The data is loaded using commands below :
+
+```{r, warning=FALSE} 
+setwd("C:/Users/sn022416/Documents/Personal/Practical Machine Learning")
+PMLData <- read.csv("pml-training.csv",head=TRUE,na.string = c("NA","") )
+
+```
+
+Caret package was loaded using the library command and the data properties were reviewed using dim and summary commands. It was discovered that about there are 19,622 observations and 160 variables. A closer look at the summary revealed that about 101 variables have NA as values. These variables were saved in the "wanted" variable.
+
+```{r, warning=FALSE} 
+library(caret)
+
+dim(PMLData)
+
+wanted = !colnames(PMLData) %in% c("X","user_name",  "kurtosis_yaw_belt","kurtosis_roll_belt","kurtosis_picth_belt","skewness_roll_belt","skewness_roll_belt","skewness_roll_belt.1","skewness_yaw_belt","max_roll_belt","max_picth_belt","max_yaw_belt","min_roll_belt","min_pitch_belt","min_yaw_belt","amplitude_roll_belt","amplitude_pitch_belt","amplitude_yaw_belt","var_total_accel_belt","avg_roll_belt","stddev_roll_belt","avg_pitch_belt","stddev_pitch_belt","var_pitch_belt","avg_yaw_belt","stddev_yaw_belt","var_yaw_belt","var_accel_arm","avg_roll_arm","stddev_roll_arm","var_roll_arm","avg_pitch_arm","stddev_pitch_arm ","var_pitch_arm","avg_yaw_arm","stddev_yaw_arm","var_yaw_arm","kurtosis_roll_arm","kurtosis_picth_arm","kurtosis_yaw_arm","skewness_roll_arm","skewness_pitch_arm","skewness_yaw_arm ","max_roll_arm","max_picth_arm","max_yaw_arm","min_roll_arm","min_pitch_arm","min_yaw_arm","amplitude_roll_arm","amplitude_pitch_arm","amplitude_yaw_arm","kurtosis_roll_dumbbell","kurtosis_picth_dumbbell","kurtosis_yaw_dumbbell","skewness_roll_dumbbell","skewness_pitch_dumbbell","skewness_yaw_dumbbell","max_roll_dumbbell","max_picth_dumbbell","max_yaw_dumbbell","min_roll_dumbbell","min_pitch_dumbbell","min_yaw_dumbbell","amplitude_roll_dumbbell","amplitude_pitch_dumbbell","min_pitch_dumbbell","min_yaw_dumbbell","amplitude_roll_dumbbell","amplitude_pitch_dumbbell","amplitude_yaw_dumbbell","var_accel_dumbbell","avg_roll_dumbbell","stddev_roll_dumbbell","var_roll_dumbbell","avg_pitch_dumbbell","stddev_pitch_dumbbell","var_pitch_dumbbell","avg_yaw_dumbbell","stddev_yaw_dumbbell","var_yaw_dumbbell","kurtosis_roll_forearm","kurtosis_picth_forearm","kurtosis_yaw_forearm","skewness_roll_forearm","skewness_pitch_forearm","skewness_yaw_forearm","max_roll_forearm","max_picth_forearm","max_yaw_forearm","min_roll_forearm","min_pitch_forearm","min_yaw_forearm","amplitude_roll_forearm","amplitude_pitch_forearm","amplitude_yaw_forearm","var_roll_belt","stddev_pitch_arm","stddev_pitch_arm","skewness_yaw_arm","var_accel_forearm","avg_roll_forearm","stddev_roll_forearm","var_roll_forearm","avg_pitch_forearm","stddev_pitch_forearm","var_pitch_forearm","avg_yaw_forearm","stddev_yaw_forearm","var_yaw_forearm")
+```
+
+
+The PMLData was partitioned using createDataPartition function to 60% training and 40% test data excluding 102 variables without valid values (wanted variable) as shown below:
+
+```{r, warning=FALSE}
+inTrain <- createDataPartition(PMLData$classe,p=0.6,list=FALSE)
+training<- PMLData[inTrain,wanted]
+testing <- PMLData[-inTrain,wanted]
+
+```
+
+Linear Discriminant Analysis method was used to train the model because the variables are five (more than two) and the classes are well-separated.
+
+```{r, warning=FALSE}
+modelFit<- train(classe ~.,data=training, method="lda")
+
+```
+
+### Results:
+The summary of our model (modelFit variable) is below:
+```{r, echo=FALSE} 
+modelFit
+
+```
+
+There shows that the accuracy of the model is about 99.9%
+
+### Cross Validation:
+The model built was used to predict the remaining 40% test data using "predict" function and the confustionMatrix function was used to calculate a cross-tabulation of observed and predicted classes with associated statistics.
+```{r, echo=FALSE} 
+predictions <- predict(modelFit, testing)
+confusionMatrix(predictions,testing$classe)
+
+```
+
+The result showed that there is accuracy of approximately 1 at 95% confidence interval.
+
+### Conclusion:
+
+From the Confusion matrix computed above using the unseen test data, it is obvious that the model chosen was appropriate for predicting classe variable provided the other variables are available.
